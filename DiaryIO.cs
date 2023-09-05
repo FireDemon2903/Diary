@@ -9,15 +9,19 @@ using System.Text;
 namespace Diary
 {
     // Documentation: https://learn.microsoft.com/en-us/azure/data-lake-analytics/data-lake-analytics-u-sql-get-started
-    internal class DiaryIO
+    internal static class DiaryIO
     {
-        public static void Write(string text)
+        public static void WriteEntry(string entry)
         {
-            //
+
         }
-        public static string Read(string text)
+
+        public static List<string> ReadEntries()
         {
-            // 
+            return new List<string>();
         }
+
+
+
     }
 }

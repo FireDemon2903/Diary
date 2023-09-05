@@ -10,7 +10,8 @@ namespace Diary
     {
         static void Main()
         {
-
+            HandleUserLogin.Login();
+            UserIO.MainLoop();
         }
     }
 }
