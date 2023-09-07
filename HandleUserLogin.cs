@@ -10,7 +10,18 @@ namespace Diary
 {
     internal class HandleUserLogin
     {
-        public static void Login()
+        private static readonly string userLoginsDataPath = @"C:\Users\Jonathan\source\repos\Diary\userLoginsData.json";
+
+        public static void MainUser()
+        {
+            UserSet users = LoadFromJSON(userLoginsDataPath);
+
+            AddUser(users);
+            Login(users);
+        }
+
+        // Method for logging in
+        public static void Login(UserSet users)
         {
             Console.WriteLine("Welcome to Diary!");
             Console.Write("Please enter your username: ");
@@ -18,10 +29,7 @@ namespace Diary
             Console.Write("Please enter your password: ");
             string password = Console.ReadLine();
 
-            UserList users = LoadFromJSON(@"C:\Users\Jonathan\source\repos\Diary\userLoginsData.json");
-
-            foreach (User user in users)
-                Console.WriteLine(user.Username, user.Password);
+            //UserSet users = LoadFromJSON(userLoginsDataPath);
 
             // Check Credentials
             if (CheckCredentials(username, password, users))
@@ -32,31 +40,43 @@ namespace Diary
             {
                 Console.WriteLine("Login failed. Incorrect username or password.");
             }
-
-            Console.WriteLine("Wait...");
-            Console.ReadLine();
         }
 
-        private static bool CheckCredentials(string username, string password, UserList userList)
+        // Method for adding a user
+        private static void AddUser(UserSet userSet)
         {
-            User checkedUser = new User(username, password);
-            return userList.Contains(checkedUser);
+            Console.WriteLine("Enter a username: ");
+            string username = Console.ReadLine();
+            Console.WriteLine("Enter a password: ");
+            string password = Console.ReadLine();
+
+            userSet.Add(new User(username, password));
+            SaveToJSON(userSet);
         }
 
+        // Method for checking credentials
+        private static bool CheckCredentials(string username, string password, UserSet userSet)
+        {
+            User checkedUser = new(username, password);
+            return userSet.Contains(checkedUser);
+        }
 
-        //public void SaveToJSON(string jsonPath)
-        //{
+        // Method for saving to JSON
+        public static void SaveToJSON(UserSet userSet)
+        {
+            UserListJson userList = new() { UserList = userSet.ToList() };
+            
+            JsonSerializerOptions options = new()
+            {
+                WriteIndented = true  // Format the JSON with indentation
+            };
 
-        //    JsonSerializerOptions options = new()
-        //    {
-        //        WriteIndented = true  // Format the JSON with indentation
-        //    };
+            string jsonString = JsonSerializer.Serialize(userList, options);
+            File.WriteAllText(userLoginsDataPath, jsonString);
+            Console.WriteLine("Saved");
+        }
 
-        //    string jsonString = JsonSerializer.Serialize(productRegisterJson, options);
-        //    File.WriteAllText(jsonPath, jsonString);
-        //    Console.WriteLine("Saved to " + jsonPath);
-        //}
-
+        // Method for loading from JSON
         public static UserSet LoadFromJSON(string jsonPath)
         {
             string jsonString = File.ReadAllText(jsonPath);
@@ -77,7 +97,7 @@ namespace Diary
         public List<User> UserList { get; set; }
     }
 
-
+    // Class for storing users
     public class UserSet
     {
         private readonly HashSet<User> users = new(new UserComparer());
@@ -90,8 +110,11 @@ namespace Diary
 
         public void AddFromList(List<User> userList)
         { foreach (User user in userList) users.Add(user); }
+
+        public List<User> ToList() { return users.ToList(); }
     }
 
+    // Class for storing user data
     public class User(string UserName, string Password)
     {
         public string Username { get; set; } = UserName;
@@ -115,6 +138,7 @@ namespace Diary
 
     }
 
+    // Class for comparing users
     public class UserComparer : EqualityComparer<User>
     {
         public override bool Equals(User x, User y)
