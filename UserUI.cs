@@ -9,6 +9,7 @@ namespace Diary
 {
     internal class UserIO
     {
+        // For now, UserIO is console based, will change to GUI when we get to it in class
         public static void MainLoop()
         {
             bool _isRunning = true;

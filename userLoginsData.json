@@ -1,0 +1,16 @@
+{
+  "UserList": [
+    {
+      "Username": "user1",
+      "Password": "P455W0Rd"
+    },
+    {
+      "Username": "User2",
+      "Password": "lmao"
+    },
+    {
+      "Username": "test",
+      "Password": "test"
+    }
+  ]
+}
