@@ -10,8 +10,11 @@ namespace Diary
     {
         static void Main()
         {
-            HandleUserLogin.MainUser();
+            HandleUserLogin.InterfaceEntry();
             //UserIO.MainLoop();
+
+            Console.WriteLine("Press any key to exit...");
+            Console.ReadKey();
         }
     }
 }

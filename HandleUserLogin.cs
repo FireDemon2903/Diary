@@ -12,16 +12,19 @@ namespace Diary
     {
         private static readonly string userLoginsDataPath = @"C:\Users\Jonathan\source\repos\Diary\userLoginsData.json";
 
-        public static void MainUser()
+        public static void InterfaceEntry()
         {
-            UserSet users = LoadFromJSON(userLoginsDataPath);
+            UserSet userSet = LoadFromJSON(userLoginsDataPath);
 
-            AddUser(users);
-            Login(users);
+            foreach (User user in userSet.ToList())
+                Console.WriteLine(user);
+
+            AddUser(userSet);
+            Login(userSet);
         }
 
         // Method for logging in
-        public static void Login(UserSet users)
+        public static void Login(UserSet userSet)
         {
             Console.WriteLine("Welcome to Diary!");
             Console.Write("Please enter your username: ");
@@ -29,12 +32,14 @@ namespace Diary
             Console.Write("Please enter your password: ");
             string password = Console.ReadLine();
 
-            //UserSet users = LoadFromJSON(userLoginsDataPath);
+            // Generate user object from input
+            User user = new(username, password);
 
             // Check Credentials
-            if (CheckCredentials(username, password, users))
+            if (CheckCredentials(user, userSet))
             {
                 Console.WriteLine("Login successful!");
+                Console.WriteLine("Access Token: " + userSet.GetAccessToken(user));
             }
             else
             {
@@ -55,10 +60,16 @@ namespace Diary
         }
 
         // Method for checking credentials
-        private static bool CheckCredentials(string username, string password, UserSet userSet)
+        private static bool CheckCredentials(User user, UserSet userSet)
         {
-            User checkedUser = new(username, password);
-            return userSet.Contains(checkedUser);
+            if (userSet.Contains(user))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         // Method for saving to JSON
@@ -88,7 +99,6 @@ namespace Diary
 
             return userSet;
         }
-
     }
 
     // Class specifically for reading and writing JSON
@@ -104,7 +114,11 @@ namespace Diary
 
         public bool Contains(User user) { return users.Contains(user); }
 
-        public void Add(User user) { users.Add(user); }
+        public void Add(User user)
+        {
+            users.Add(user);
+            user.AccessToken ??= user.GenerateAccessToken();
+        }
 
         public void Remove(User user) { users.Remove(user); }
 
@@ -112,46 +126,76 @@ namespace Diary
         { foreach (User user in userList) users.Add(user); }
 
         public List<User> ToList() { return users.ToList(); }
+
+        public string GetAccessToken(User user)
+        { return users.ToList().Find(x => x.Equals(user)).AccessToken; }
     }
 
     // Class for storing user data
-    public class User(string UserName, string Password)
+    public class User(string username, string password)
     {
-        public string Username { get; set; } = UserName;
-        public string Password { get; set; } = Password;
+        public string Username { get; set; } = username;
+        public string Password { get; set; } = password;
+        public string AccessToken { get; set; }
 
         public override int GetHashCode()
         {
             return HashCode.Combine(Username, Password);
         }
 
+        // TODO: Understand
         public override bool Equals(object obj)
         {
             if (obj == null || GetType() != obj.GetType())
-            {
                 return false;
-            }
 
             User otherUser = (User)obj;
             return Username == otherUser.Username && Password == otherUser.Password;
         }
+
+        public string GenerateAccessToken()
+        {
+            const string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            Random random = new();
+            string token = new(Enumerable.Repeat(CHARS, 32).Select(s => s[random.Next(s.Length)]).ToArray());
+            Console.WriteLine("Access Token Generated: " + token);
+            return token;
+        }
+
+        public static bool operator ==(User user1, User user2)
+        { return EqualityComparer<User>.Default.Equals(user1, user2); }
+
+        public static bool operator !=(User user1, User user2)
+        { return !(user1 == user2); }
+
+        //public override string ToString()
+        //{ return "Username: " + Username + "\nPassword: " + Password + "\nAccess Token: " + AccessToken; }
 
     }
 
     // Class for comparing users
     public class UserComparer : EqualityComparer<User>
     {
+        // Check if current works ('==' override from User class)
         public override bool Equals(User x, User y)
+        {
+            //if (x == null || y == null)
+            //    return x == y;
+
+            return x == y;
+
+            //return x.GetHashCode() == y.GetHashCode();
+        }
+
+        public bool Equals(User x, User y, bool ignoreAccessToken)
         {
             if (x == null || y == null)
                 return x == y;
-            
-            // Used to compare specific objects. Only returns true if the exact same object instance is passed twice
-            // If both x and y are null or reference the same object, they are equal
-            //if (ReferenceEquals(x, y))
-            //    return true;
 
-            return x.GetHashCode() == y.GetHashCode();
+            if (ignoreAccessToken)
+                return x.Username == y.Username && x.Password == y.Password;
+            else
+                return x.Username == y.Username && x.Password == y.Password && x.AccessToken == y.AccessToken;
         }
 
         // Unused
