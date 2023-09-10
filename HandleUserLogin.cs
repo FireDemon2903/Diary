@@ -10,7 +10,8 @@ namespace Diary
 {
     internal class HandleUserLogin
     {
-        private static readonly string userLoginsDataPath = @"C:\Users\Jonathan\source\repos\Diary\userLoginsData.json";
+        //private static readonly string userLoginsDataPath = @"C:\Users\Jonathan\source\repos\Diary\userLoginsData.json";
+        private static readonly string userLoginsDataPath = @"C:\Users\Jonathan\Source\Repos\FireDemon2903\Diary\userLoginsData.json";
 
         public static void InterfaceEntry()
         {
@@ -39,7 +40,7 @@ namespace Diary
             if (CheckCredentials(user, userSet))
             {
                 Console.WriteLine("Login successful!");
-                Console.WriteLine("Access Token: " + userSet.GetAccessToken(user));
+                //Console.WriteLine("Access Token: " + userSet.GetAccessToken(user));
             }
             else
             {
@@ -55,7 +56,16 @@ namespace Diary
             Console.WriteLine("Enter a password: ");
             string password = Console.ReadLine();
 
-            userSet.Add(new User(username, password));
+            User user = new(username, password);
+
+            if (CheckCredentials(user, userSet))
+            {
+                Console.WriteLine("User alredy exists");
+            }
+            else
+            {
+                userSet.Add(user);
+            }
             SaveToJSON(userSet);
         }
 
@@ -157,7 +167,7 @@ namespace Diary
         {
             const string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             Random random = new();
-            string token = new(Enumerable.Repeat(CHARS, 32).Select(s => s[random.Next(s.Length)]).ToArray());
+            string token = new(Enumerable.Repeat(CHARS, 64).Select(s => s[random.Next(s.Length)]).ToArray());
             Console.WriteLine("Access Token Generated: " + token);
             return token;
         }
