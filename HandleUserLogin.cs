@@ -10,8 +10,9 @@ namespace Diary
 {
     internal class HandleUserLogin
     {
-        //private static readonly string userLoginsDataPath = @"C:\Users\Jonathan\source\repos\Diary\userLoginsData.json";
-        private static readonly string userLoginsDataPath = @"C:\Users\Jonathan\Source\Repos\FireDemon2903\Diary\userLoginsData.json";
+        // Path to userLoginsData.json
+        public static string userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        private static readonly string userLoginsDataPath = @$"{userPath}\source\repos\Diary\userLoginsData.json";
 
         public static void InterfaceEntry()
         {
