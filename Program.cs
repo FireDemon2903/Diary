@@ -10,11 +10,14 @@ namespace Diary
 
         static void Main()
         {
-            HandleUserLogin.InterfaceEntry();
+            HandleUserLogin.Entry();
 
             Console.WriteLine("User ID: " + UserID);
             Console.WriteLine("User Name: " + UserName);
             Console.WriteLine("Access Token: " + UserAccessToken);
+
+            DatabaseIO database = new();
+            UserIO.Entry(database);
 
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();

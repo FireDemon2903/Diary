@@ -82,8 +82,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="HandleUserLogin.cs" />
-    <Compile Include="DiaryIO.cs" />
-    <Compile Include="UserUI.cs" />
+    <Compile Include="DatabaseIO.cs" />
+    <Compile Include="UserIO.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

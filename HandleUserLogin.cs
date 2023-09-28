@@ -14,11 +14,11 @@ namespace Diary
         // Path to userLoginsData.json
         private static readonly string userLoginsDataPath = @"Data\userLoginsData.json";
 
-        public static void InterfaceEntry()
+        public static void Entry()
         {
             UserSet userSet = LoadFromJSON(userLoginsDataPath);
 
-            AddUser(userSet);
+            //AddUser(userSet);
 
             Login(userSet);
         }
