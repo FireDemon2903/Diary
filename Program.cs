@@ -8,7 +8,7 @@ namespace Diary
 {
     internal class Program
     {
-        public static readonly string userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        //public static readonly string userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         public static string AccessToken { get; private set; }
         static void Main()
         {
@@ -16,6 +16,8 @@ namespace Diary
             //UserIO.MainLoop();
 
             Console.WriteLine("Access Token: " + AccessToken);
+
+            // TODO: Add methodcall for diary here
 
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
@@ -25,6 +27,5 @@ namespace Diary
         {
             AccessToken = token;
         }
-
     }
 }

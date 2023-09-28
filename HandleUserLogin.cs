@@ -11,7 +11,7 @@ namespace Diary
     internal class HandleUserLogin
     {
         // Path to userLoginsData.json
-        private static readonly string userLoginsDataPath = @$"{Program.userPath}\source\repos\Diary\userLoginsData.json";
+        private static readonly string userLoginsDataPath = @"Data\userLoginsData.json";
 
         public static void InterfaceEntry()
         {
@@ -21,33 +21,37 @@ namespace Diary
                 Console.WriteLine(user);
 
             //AddUser(userSet);
-            //Login(userSet);
+            Login(userSet);
         }
 
         // Method for logging in
         public static void Login(UserSet userSet)
         {
             Console.WriteLine("Welcome to Diary!");
-            Console.Write("Please enter your username: ");
-            string username = Console.ReadLine();
-            Console.Write("Please enter your password: ");
-            string password = Console.ReadLine();
 
-            // Generate user object from input
-            User user = new(username, password);
+            while (true)
+            {
+                Console.Write("Please enter your username: ");
+                string username = Console.ReadLine();
+                Console.Write("Please enter your password: ");
+                string password = Console.ReadLine();
 
-            // Check Credentials
-            if (CheckCredentials(user, userSet))
-            {
-                Console.WriteLine("Login successful!");
-                //Console.WriteLine("Access Token: " + userSet.GetAccessToken(user));
-                //Program.AccessToken = userSet.GetAccessToken(user);
-                Program.SetAccessToken(userSet.GetAccessToken(user));
+                // Generate user object from input
+                User user = new(username, password);
+
+                // Check Credentials
+                if (CheckCredentials(user, userSet))
+                {
+                    Console.WriteLine("Login successful!");
+                    Program.SetAccessToken(userSet.GetAccessToken(user));
+                    return;
+                }
+                else
+                {
+                    Console.WriteLine("Login failed. Incorrect username or password.");
+                }
             }
-            else
-            {
-                Console.WriteLine("Login failed. Incorrect username or password.");
-            }
+
         }
 
         // Method for adding a user
@@ -190,32 +194,19 @@ namespace Diary
     // Class for comparing users
     public class UserComparer : EqualityComparer<User>
     {
-        // Check if current works ('==' override from User class)
         public override bool Equals(User x, User y)
         {
-            //if (x == null || y == null)
-            //    return x == y;
-
-            return x == y;
-
-            //return x.GetHashCode() == y.GetHashCode();
-        }
-
-        public bool Equals(User x, User y, bool ignoreAccessToken)
-        {
             if (x == null || y == null)
+            {
                 return x == y;
+            }
 
-            if (ignoreAccessToken)
-                return x.Username == y.Username && x.Password == y.Password;
-            else
-                return x.Username == y.Username && x.Password == y.Password && x.AccessToken == y.AccessToken;
+            return x.Username == y.Username && x.Password == y.Password && x.AccessToken == y.AccessToken;
         }
 
-        // Unused
         public override int GetHashCode(User obj)
         {
-            return obj == null ? 0 : (obj.Username.GetHashCode() ^ obj.Password.GetHashCode());
+            return obj == null ? 0 : (HashCode.Combine(obj.Username, obj.Password, obj.AccessToken));
         }
 
     }
