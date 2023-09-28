@@ -1,31 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Diary
 {
     internal class Program
     {
-        //public static readonly string userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        public static string AccessToken { get; private set; }
+        public static string UserAccessToken { get; private set; }
+        public static Guid UserID { get; private set; }
+        public static string UserName { get; private set; }
+
         static void Main()
         {
             HandleUserLogin.InterfaceEntry();
-            //UserIO.MainLoop();
 
-            Console.WriteLine("Access Token: " + AccessToken);
-
-            // TODO: Add methodcall for diary here
+            Console.WriteLine("User ID: " + UserID);
+            Console.WriteLine("User Name: " + UserName);
+            Console.WriteLine("Access Token: " + UserAccessToken);
 
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
         }
 
-        public static void SetAccessToken(string token)
+        public static void SetUserData(Guid userID, string userName, string accessToken)
         {
-            AccessToken = token;
+            UserID = userID;
+            UserName = userName;
+            UserAccessToken = accessToken;
         }
+
     }
 }

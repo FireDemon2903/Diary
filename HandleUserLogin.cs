@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-
+using System.Text;
 
 namespace Diary
 {
@@ -17,10 +18,8 @@ namespace Diary
         {
             UserSet userSet = LoadFromJSON(userLoginsDataPath);
 
-            foreach (User user in userSet.ToList())
-                Console.WriteLine(user);
+            AddUser(userSet);
 
-            //AddUser(userSet);
             Login(userSet);
         }
 
@@ -36,22 +35,39 @@ namespace Diary
                 Console.Write("Please enter your password: ");
                 string password = Console.ReadLine();
 
-                // Generate user object from input
-                User user = new(username, password);
+                // Use LINQ to retrieve all users with the specified username
+                IEnumerable<User> usersWithSameUsername = userSet.ToList().Where(user => user.Username == username);
 
-                // Check Credentials
-                if (CheckCredentials(user, userSet))
+                foreach (var user in usersWithSameUsername)
                 {
-                    Console.WriteLine("Login successful!");
-                    Program.SetAccessToken(userSet.GetAccessToken(user));
-                    return;
+                    // Get salt
+                    byte[] salt = Convert.FromBase64String(user.Salt);
+
+                    // Convert the password to bytes
+                    byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+
+                    // Combine the password and salt, then hash the result
+                    using var sha256 = new SHA256Managed();
+                    byte[] saltedPassword = new byte[passwordBytes.Length + salt.Length];
+                    passwordBytes.CopyTo(saltedPassword, 0);
+                    salt.CopyTo(saltedPassword, passwordBytes.Length);
+
+                    // Hash the salted password
+                    byte[] hashedPassword = sha256.ComputeHash(saltedPassword);
+
+                    // Check if the hashed password matches the stored password
+                    if (Convert.ToBase64String(hashedPassword) == user.PasswordHash)
+                    {
+                        Console.WriteLine("Login successful!");
+                        
+                        Program.SetUserData(user.UserID, user.Username, userSet.GetAccessToken(user));
+
+                        return;
+                    }
                 }
-                else
-                {
-                    Console.WriteLine("Login failed. Incorrect username or password.");
-                }
+                
+                Console.WriteLine("Login failed!");
             }
-
         }
 
         // Method for adding a user
@@ -62,32 +78,9 @@ namespace Diary
             Console.WriteLine("Enter a password: ");
             string password = Console.ReadLine();
 
-            User user = new(username, password);
+            userSet.CreateUser(username, password);
 
-            if (CheckCredentials(user, userSet))
-            {
-                Console.WriteLine("User alredy exists");
-                Program.SetAccessToken(userSet.GetAccessToken(user));
-            }
-            else
-            {
-                userSet.Add(user);
-                Program.SetAccessToken(userSet.GetAccessToken(user));
-            }
             SaveToJSON(userSet);
-        }
-
-        // Method for checking credentials
-        private static bool CheckCredentials(User user, UserSet userSet)
-        {
-            if (userSet.Contains(user))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
         }
 
         // Method for saving to JSON
@@ -132,10 +125,37 @@ namespace Diary
 
         public bool Contains(User user) { return users.Contains(user); }
 
-        public void Add(User user)
+        public void CreateUser(string username, string password)
         {
-            users.Add(user);
-            user.AccessToken ??= user.GenerateAccessToken();
+            // Generate a random salt
+            byte[] salt = new byte[16];
+            using (var rng = new RNGCryptoServiceProvider())
+            {
+                rng.GetBytes(salt);
+            }
+
+            // Convert the password to bytes
+            byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+
+            // Combine the password and salt, then hash the result
+            using var sha256 = new SHA256Managed();
+            byte[] saltedPassword = new byte[passwordBytes.Length + salt.Length];
+            passwordBytes.CopyTo(saltedPassword, 0);
+            salt.CopyTo(saltedPassword, passwordBytes.Length);
+
+            byte[] hashedPassword = sha256.ComputeHash(saltedPassword);
+
+            // Store the salt and hashed password in your User object
+            User newUser = new()
+            {
+                UserID = Guid.NewGuid(),
+                Username = username,
+                PasswordHash = Convert.ToBase64String(hashedPassword),
+                Salt = Convert.ToBase64String(salt),
+                AccessToken = User.GenerateAccessToken()
+            };
+
+            users.Add(newUser);
         }
 
         public void Remove(User user) { users.Remove(user); }
@@ -150,15 +170,17 @@ namespace Diary
     }
 
     // Class for storing user data
-    public class User(string username, string password)
+    public class User
     {
-        public string Username { get; set; } = username;
-        public string Password { get; set; } = password;
+        public Guid UserID { get; set; }
+        public string Username { get; set; }
+        public string Salt { get; set; }
+        public string PasswordHash { get; set; }
         public string AccessToken { get; set; }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Username, Password);
+            return HashCode.Combine(Username, PasswordHash);
         }
 
         // TODO: Understand
@@ -168,15 +190,15 @@ namespace Diary
                 return false;
 
             User otherUser = (User)obj;
-            return Username == otherUser.Username && Password == otherUser.Password;
+            return Username == otherUser.Username && PasswordHash == otherUser.PasswordHash;
         }
 
-        public string GenerateAccessToken()
+        public static string GenerateAccessToken()
         {
             const string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             Random random = new();
             string token = new(Enumerable.Repeat(CHARS, 64).Select(s => s[random.Next(s.Length)]).ToArray());
-            Console.WriteLine("Access Token Generated: " + token);
+            //Console.WriteLine("Access Token Generated: " + token);
             return token;
         }
 
@@ -188,7 +210,6 @@ namespace Diary
 
         //public override string ToString()
         //{ return "Username: " + Username + "\nPassword: " + Password + "\nAccess Token: " + AccessToken; }
-
     }
 
     // Class for comparing users
@@ -201,12 +222,12 @@ namespace Diary
                 return x == y;
             }
 
-            return x.Username == y.Username && x.Password == y.Password && x.AccessToken == y.AccessToken;
+            return x.Username == y.Username && x.PasswordHash == y.PasswordHash && x.AccessToken == y.AccessToken;
         }
 
         public override int GetHashCode(User obj)
         {
-            return obj == null ? 0 : (HashCode.Combine(obj.Username, obj.Password, obj.AccessToken));
+            return obj == null ? 0 : (HashCode.Combine(obj.Username, obj.PasswordHash, obj.AccessToken));
         }
 
     }
