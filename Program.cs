@@ -27,5 +27,12 @@ namespace Diary
             UserAccessToken = accessToken;
         }
 
+        public static void ClearUserData()
+        {
+            UserID = Guid.Empty;
+            UserName = null;
+            UserAccessToken = null;
+        }
+
     }
 }
