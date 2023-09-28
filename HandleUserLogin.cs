@@ -11,8 +11,7 @@ namespace Diary
     internal class HandleUserLogin
     {
         // Path to userLoginsData.json
-        public static string userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        private static readonly string userLoginsDataPath = @$"{userPath}\source\repos\Diary\userLoginsData.json";
+        private static readonly string userLoginsDataPath = @$"{Program.userPath}\source\repos\Diary\userLoginsData.json";
 
         public static void InterfaceEntry()
         {
@@ -21,8 +20,8 @@ namespace Diary
             foreach (User user in userSet.ToList())
                 Console.WriteLine(user);
 
-            AddUser(userSet);
-            Login(userSet);
+            //AddUser(userSet);
+            //Login(userSet);
         }
 
         // Method for logging in
@@ -42,6 +41,8 @@ namespace Diary
             {
                 Console.WriteLine("Login successful!");
                 //Console.WriteLine("Access Token: " + userSet.GetAccessToken(user));
+                //Program.AccessToken = userSet.GetAccessToken(user);
+                Program.SetAccessToken(userSet.GetAccessToken(user));
             }
             else
             {
@@ -62,10 +63,12 @@ namespace Diary
             if (CheckCredentials(user, userSet))
             {
                 Console.WriteLine("User alredy exists");
+                Program.SetAccessToken(userSet.GetAccessToken(user));
             }
             else
             {
                 userSet.Add(user);
+                Program.SetAccessToken(userSet.GetAccessToken(user));
             }
             SaveToJSON(userSet);
         }
